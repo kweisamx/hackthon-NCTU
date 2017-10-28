@@ -2,34 +2,40 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"log"
 	"os/exec"
 	"strings"
+	//"time"
 	//   "os"
 )
 
 type data struct {
-	Ip  string `json:"ip"`
-	Mac string `json:"mac"`
+	Host string `json:"host"`
+	Ip   string `json:"ip"`
 }
 
 func getinfo(c *gin.Context) {
 
-	cmd1 := exec.Command("arp", "-n", "-a")
-	cmd2 := exec.Command("grep", "-v", "00:00:00:00:00:00")
+	cmd1 := exec.Command("nmap", "-sP", "192.168.1.0/24")
+	cmd2 := exec.Command("grep", "Nmap")
 	cmd3 := exec.Command("sed", "1d")
-	cmd4 := exec.Command("awk", `{print $2 "\t" $4}`)
-	// Pipe the cmd1 and cmd2
+	cmd4 := exec.Command("sed", "$d")
+	cmd5 := exec.Command("awk", `{print $5 "\t" $6}`)
+
+	//pipe
 	cmd2.Stdin, _ = cmd1.StdoutPipe()
 	cmd3.Stdin, _ = cmd2.StdoutPipe()
 	cmd4.Stdin, _ = cmd3.StdoutPipe()
-	stdout, err := cmd4.StdoutPipe()
+	cmd5.Stdin, _ = cmd4.StdoutPipe()
+	stdout, err := cmd5.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
 	}
 	//sed and awk them to get info
+	cmd5.Start()
 	cmd4.Start()
 	cmd3.Start()
 	cmd2.Start()
@@ -46,12 +52,12 @@ func getinfo(c *gin.Context) {
 		if name != "" {
 			fmt.Println("########", name)
 			for index, info := range strings.Split(name, "\t") {
-				if index%2 == 0 {
+				if index%2 == 1 {
 					app.Ip = strings.Trim(info, "(")
 					app.Ip = strings.Trim(app.Ip, ")")
 
 				} else {
-					app.Mac = info
+					app.Host = info
 				}
 			}
 			fmt.Println("!!!", app)
@@ -67,6 +73,20 @@ func getinfo(c *gin.Context) {
 
 func main() {
 	r := gin.Default()
+	/*
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     true,
+		AllowMethods:     []string{"PUT", "PATCH", "GET"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowOriginFunc: func(origin string) bool {
+			return origin == "https://github.com"
+		},
+		MaxAge: 12 * time.Hour,
+	}))
+	*/
+	r.Use(cors.Default())
 	r.GET("/getipinfo", getinfo)
-	r.Run("192.168.1.135:8000")
+	r.Run(":8000")
 }
