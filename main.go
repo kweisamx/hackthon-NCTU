@@ -85,7 +85,7 @@ func gethash(c *gin.Context) {
 
 	hashinfo := make([]string, 0, 0)
 	for _, name := range strings.Split(string(opBytes), "\n") {
-		if name == "" {
+		if name != "" {
 			hash := strings.Split(name, " ")
 			hashinfo = append(hashinfo, hash[0])
 		}
@@ -101,7 +101,7 @@ func gethash(c *gin.Context) {
 func main() {
 	r := gin.Default()
 	r.Use(cors.Default())
-	r.GET("/hosthash", gethash)
-	r.GET("/getipinfo", getinfo)
+	r.GET("/hash", gethash)
+	r.GET("/ipinfo", getinfo)
 	r.Run(":8000")
 }
