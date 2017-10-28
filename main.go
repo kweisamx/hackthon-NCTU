@@ -1,11 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"log"
 	"os/exec"
-	//   "fmt"
 	"strings"
 	//   "os"
 )
@@ -40,18 +40,22 @@ func getinfo(c *gin.Context) {
 		log.Fatal(err)
 	}
 	log.Println(string(opBytes))
-	var d = make([]data, 2, 2)
+	var d = make([]data, 0, 0)
 	var app data
 	for _, name := range strings.Split(string(opBytes), "\n") {
-		for index, info := range strings.Split(name, "\t") {
-			if info != "" {
+		if name != "" {
+			fmt.Println("########", name)
+			for index, info := range strings.Split(name, "\t") {
 				if index%2 == 0 {
-					app.Ip = info
+					app.Ip = strings.Trim(info, "(")
+					app.Ip = strings.Trim(app.Ip, ")")
+
 				} else {
 					app.Mac = info
 				}
-			d = append(d, app)
 			}
+			fmt.Println("!!!", app)
+			d = append(d, app)
 		}
 	}
 	c.JSON(200, gin.H{
