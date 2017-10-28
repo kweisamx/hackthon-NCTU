@@ -71,22 +71,37 @@ func getinfo(c *gin.Context) {
 	return
 }
 
+func gethash(c *gin.Context) {
+	cmd1 := exec.Command("ipfs", "pin", "ls")
+	cmd2 := exec.Command("grep", "recursive")
+
+	cmd2.Stdin, _ = cmd1.StdoutPipe()
+	stdout, _ := cmd2.StdoutPipe()
+
+	cmd2.Start()
+	cmd1.Run()
+
+	opBytes, _ := ioutil.ReadAll(stdout)
+
+	hashinfo := make([]string, 0, 0)
+	for _, name := range strings.Split(string(opBytes), "\n") {
+		if name == "" {
+			hash := strings.Split(name, " ")
+			hashinfo = append(hashinfo, hash[0])
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"status": 200,
+		"data":   hashinfo,
+	})
+	return
+}
+
 func main() {
 	r := gin.Default()
-	/*
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     true,
-		AllowMethods:     []string{"PUT", "PATCH", "GET"},
-		AllowHeaders:     []string{"Origin"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		AllowOriginFunc: func(origin string) bool {
-			return origin == "https://github.com"
-		},
-		MaxAge: 12 * time.Hour,
-	}))
-	*/
 	r.Use(cors.Default())
+	r.GET("/hosthash", gethash)
 	r.GET("/getipinfo", getinfo)
 	r.Run(":8000")
 }
