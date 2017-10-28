@@ -8,8 +8,6 @@ import (
 	"log"
 	"os/exec"
 	"strings"
-	//"time"
-	//   "os"
 )
 
 type data struct {
