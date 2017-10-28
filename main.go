@@ -18,7 +18,7 @@ type data struct {
 func getinfo(c *gin.Context) {
 
 	cmd1 := exec.Command("arp", "-n", "-a")
-	cmd2 := exec.Command("grep", "-v", "00:00:00:00:00:00")
+	cmd2 := exec.Command("grep", "-v", "incomplete")
 	cmd3 := exec.Command("sed", "1d")
 	cmd4 := exec.Command("awk", `{print $2 "\t" $4}`)
 	// Pipe the cmd1 and cmd2
@@ -68,5 +68,5 @@ func getinfo(c *gin.Context) {
 func main() {
 	r := gin.Default()
 	r.GET("/getipinfo", getinfo)
-	r.Run("192.168.1.135:8000")
+	r.Run(":8000")
 }
