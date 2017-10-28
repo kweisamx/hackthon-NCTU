@@ -8,6 +8,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"os/user"
 )
 
 type data struct {
@@ -69,6 +70,13 @@ func getinfo(c *gin.Context) {
 	return
 }
 
+type hash_data struct {
+	Name string
+	Hash string
+}
+
+
+
 func gethash(c *gin.Context) {
 	cmd1 := exec.Command("ipfs", "pin", "ls")
 	cmd2 := exec.Command("grep", "recursive")
@@ -81,11 +89,24 @@ func gethash(c *gin.Context) {
 
 	opBytes, _ := ioutil.ReadAll(stdout)
 
-	hashinfo := make([]string, 0, 0)
+	usr, _ := user.Current()
+	dat, _ := ioutil.ReadFile( usr.HomeDir + "/.ipfs_addedlist" )
+	pre_ns := strings.Split(string(dat), "\n")
+	ns := make(map[string]string)
+	for _, d := range pre_ns {
+		if d != "" {
+			sp := strings.Split(d, " ")
+			ns[sp[0]] = sp[1]
+		}
+	}
+	hashinfo := make([]hash_data, 0, 0)
 	for _, name := range strings.Split(string(opBytes), "\n") {
 		if name != "" {
 			hash := strings.Split(name, " ")
-			hashinfo = append(hashinfo, hash[0])
+			hashinfo = append(hashinfo, hash_data{
+				Name: ns[hash[0]],
+				Hash: hash[0],
+			})
 		}
 	}
 
